@@ -2,33 +2,25 @@ version: '3.8'
 
 services:
   db:
-    image: postgres:latest
+    image: postgres:15-alpine # Лучше использовать конкретную версию (alpine легче)
+    container_name: finance_db
     restart: always
     environment:
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: ${POSTGRES_DB}
+      # Эти переменные должны быть в файле .env в этой же папке
+      POSTGRES_USER: ${POSTGRES_USER:-user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
+      POSTGRES_DB: ${POSTGRES_DB:-db}
     ports:
-      - "${POSTGRES_PORT}:5432"
+      - "${POSTGRES_PORT:-5432}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    networks:
+      - finance_network
 
-  app:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    restart: always
-    depends_on:
-      - db
-    ports:
-      - "8080:8080"
-    environment:
-      - DB_HOST=db
-      - DB_PORT=5432
-      - DB_USER=${POSTGRES_USER}
-      - DB_PASSWORD=${POSTGRES_PASSWORD}
-      - DB_NAME=${POSTGRES_DB}
-
+# Обязательно нужно объявить volume, иначе docker-compose выдаст ошибку
 volumes:
   postgres_data:
 
+networks:
+  finance_network:
+    driver: bridge
